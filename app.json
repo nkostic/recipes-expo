@@ -1,12 +1,16 @@
 {
   "expo": {
-    "name": "recipes-expo",
+    "name": "My Recipes",
     "slug": "recipes-expo",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "scheme": "recipes-expo",
+    "experiments": {
+      "typedRoutes": true
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
