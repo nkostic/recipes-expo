@@ -1,8 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Loading } from "../../components/Loading";
 import { useDeleteRecipe, useRecipe } from "../../hooks/useRecipes";
+import { formatPrepTime } from "../../utils/formatTime";
 
 export default function RecipeDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -95,7 +97,14 @@ export default function RecipeDetailScreen() {
         <View style={styles.metaInfo}>
           <Text style={styles.author}>by {recipe.author}</Text>
           <Text style={styles.date}>{formatDate(recipe.datePublished)}</Text>
+          <Text style={styles.prepTime}>🕒 {formatPrepTime(recipe.prepTimeMinutes)}</Text>
         </View>
+
+        {recipe.image && (
+          <View style={styles.section}>
+            <Image source={{ uri: recipe.image }} style={styles.recipeImage} contentFit="cover" />
+          </View>
+        )}
 
         {recipe.description && (
           <View style={styles.section}>
@@ -105,7 +114,22 @@ export default function RecipeDetailScreen() {
         )}
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Instructions</Text>
+          <Text style={styles.sectionTitle}>Ingredients ({recipe.ingredients.length})</Text>
+          {recipe.ingredients.map((ingredient, index) => (
+            <View
+              key={`ingredient-${index}-${ingredient.slice(0, 20)}`}
+              style={styles.ingredientContainer}
+            >
+              <View style={styles.bulletPoint}>
+                <Text style={styles.bulletText}>•</Text>
+              </View>
+              <Text style={styles.ingredientText}>{ingredient}</Text>
+            </View>
+          ))}
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Instructions ({recipe.steps.length} steps)</Text>
           {recipe.steps.map((step, index) => (
             <View key={`step-${index}-${step.slice(0, 20)}`} style={styles.stepContainer}>
               <View style={styles.stepNumber}>
@@ -207,5 +231,37 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#ff6b6b",
     marginTop: 16,
+  },
+  prepTime: {
+    fontSize: 14,
+    color: "#007AFF",
+    fontWeight: "500",
+    marginTop: 4,
+  },
+  recipeImage: {
+    width: "100%",
+    height: 250,
+    borderRadius: 12,
+  },
+  ingredientContainer: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    marginBottom: 8,
+  },
+  bulletPoint: {
+    width: 20,
+    alignItems: "center",
+    paddingTop: 2,
+  },
+  bulletText: {
+    fontSize: 16,
+    color: "#007AFF",
+    fontWeight: "bold",
+  },
+  ingredientText: {
+    flex: 1,
+    fontSize: 16,
+    lineHeight: 24,
+    color: "#555",
   },
 });

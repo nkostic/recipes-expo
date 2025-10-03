@@ -7,7 +7,10 @@ interface RecipeRow {
   description: string;
   author: string;
   date_published: string;
+  image: string | null;
+  ingredients: string;
   steps: string;
+  prep_time_minutes: number;
   created_at: string;
   updated_at: string;
 }
@@ -24,7 +27,10 @@ export function getAllRecipes(): Recipe[] {
     description: recipe.description,
     author: recipe.author,
     datePublished: recipe.date_published,
+    image: recipe.image || undefined,
+    ingredients: JSON.parse(recipe.ingredients || "[]"),
     steps: JSON.parse(recipe.steps),
+    prepTimeMinutes: recipe.prep_time_minutes || 0,
     createdAt: recipe.created_at,
     updatedAt: recipe.updated_at,
   }));
@@ -41,7 +47,10 @@ export function getRecipeById(id: string): Recipe | null {
     description: recipe.description,
     author: recipe.author,
     datePublished: recipe.date_published,
+    image: recipe.image || undefined,
+    ingredients: JSON.parse(recipe.ingredients || "[]"),
     steps: JSON.parse(recipe.steps),
+    prepTimeMinutes: recipe.prep_time_minutes || 0,
     createdAt: recipe.created_at,
     updatedAt: recipe.updated_at,
   };
@@ -52,15 +61,18 @@ export function createRecipe(input: CreateRecipeInput): Recipe {
   const now = new Date().toISOString();
 
   db.runSync(
-    `INSERT INTO recipes (id, title, description, author, date_published, steps, created_at, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO recipes (id, title, description, author, date_published, image, ingredients, steps, prep_time_minutes, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       id,
       input.title,
       input.description,
       input.author,
       input.datePublished,
+      input.image || null,
+      JSON.stringify(input.ingredients),
       JSON.stringify(input.steps),
+      input.prepTimeMinutes,
       now,
       now,
     ]
@@ -83,14 +95,17 @@ export function updateRecipe(id: string, updates: UpdateRecipeInput): Recipe | n
 
   db.runSync(
     `UPDATE recipes
-     SET title = ?, description = ?, author = ?, date_published = ?, steps = ?, updated_at = ?
+     SET title = ?, description = ?, author = ?, date_published = ?, image = ?, ingredients = ?, steps = ?, prep_time_minutes = ?, updated_at = ?
      WHERE id = ?`,
     [
       updated.title,
       updated.description,
       updated.author,
       updated.datePublished,
+      updated.image || null,
+      JSON.stringify(updated.ingredients),
       JSON.stringify(updated.steps),
+      updated.prepTimeMinutes,
       updated.updatedAt,
       id,
     ]

@@ -1,23 +1,23 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createRecipe,
   deleteRecipe,
   getAllRecipes,
   getRecipeById,
   updateRecipe,
-} from "../lib/recipeRepository";
-import type { CreateRecipeInput, UpdateRecipeInput } from "../types";
+} from '../lib/recipeRepository';
+import type { CreateRecipeInput, UpdateRecipeInput } from '../types';
 
 export const useRecipes = () => {
   return useQuery({
-    queryKey: ["recipes"],
+    queryKey: ['recipes'],
     queryFn: () => getAllRecipes(),
   });
 };
 
 export const useRecipe = (id: string) => {
   return useQuery({
-    queryKey: ["recipe", id],
+    queryKey: ['recipe', id],
     queryFn: () => getRecipeById(id),
     enabled: !!id,
   });
@@ -31,7 +31,7 @@ export const useCreateRecipe = () => {
       return Promise.resolve(createRecipe(input));
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 };
@@ -42,12 +42,12 @@ export const useUpdateRecipe = () => {
   return useMutation({
     mutationFn: ({ id, updates }: { id: string; updates: UpdateRecipeInput }) => {
       const result = updateRecipe(id, updates);
-      if (!result) throw new Error("Recipe not found");
+      if (!result) throw new Error('Recipe not found');
       return Promise.resolve(result);
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] });
-      queryClient.invalidateQueries({ queryKey: ["recipe", data.id] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
+      queryClient.invalidateQueries({ queryKey: ['recipe', data.id] });
     },
   });
 };
@@ -58,11 +58,11 @@ export const useDeleteRecipe = () => {
   return useMutation({
     mutationFn: (id: string) => {
       const success = deleteRecipe(id);
-      if (!success) throw new Error("Failed to delete recipe");
+      if (!success) throw new Error('Failed to delete recipe');
       return Promise.resolve(id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["recipes"] });
+      queryClient.invalidateQueries({ queryKey: ['recipes'] });
     },
   });
 };

@@ -1,13 +1,13 @@
-import { Ionicons } from '@expo/vector-icons';
-import { Tabs } from 'expo-router';
+import { Ionicons } from "@expo/vector-icons";
+import { Tabs } from "expo-router";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#007AFF',
+        tabBarActiveTintColor: "#007AFF",
         headerStyle: {
-          backgroundColor: '#f8f9fa',
+          backgroundColor: "#f8f9fa",
         },
         headerShadowVisible: false,
       }}
@@ -15,10 +15,10 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Recipes',
+          headerTitle: "Recipes",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
-              name={focused ? 'restaurant' : 'restaurant-outline'}
+              name={focused ? "restaurant" : "restaurant-outline"}
               color={color}
               size={24}
             />
