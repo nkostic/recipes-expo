@@ -39,7 +39,7 @@ export default function RecipeDetailScreen() {
               Alert.alert("Success", "Recipe deleted successfully!", [
                 {
                   text: "OK",
-                  onPress: () => router.back(),
+                  onPress: () => router.replace("/(tabs)"),
                 },
               ]);
             } catch (_error) {
@@ -77,7 +77,6 @@ export default function RecipeDetailScreen() {
       <Stack.Screen
         options={{
           title: recipe.title,
-          headerShown: true,
           headerRight: () => (
             <View style={styles.headerButtons}>
               <TouchableOpacity onPress={handleEdit} style={styles.headerButton}>

@@ -1,40 +1,73 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { ClerkLoaded, ClerkProvider, useAuth } from "@clerk/clerk-expo";
+import { Stack, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
-import { initDatabase } from "../lib/database";
+import { tokenCache } from "../lib/tokenCache";
+import { ConvexClientProvider } from "../providers/ConvexClientProvider";
 
-const queryClient = new QueryClient();
+const clerkPublishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
-export default function RootLayout() {
+if (!clerkPublishableKey) {
+  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable");
+}
+
+function InitialLayout() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
+
   useEffect(() => {
-    initDatabase();
-  }, []);
+    if (!isLoaded) return;
+
+    const inAuthGroup = segments[0] === "(auth)";
+
+    if (isSignedIn && inAuthGroup) {
+      // Redirect to home if signed in and on auth page
+      router.replace("/(tabs)");
+    } else if (!isSignedIn && !inAuthGroup) {
+      // Redirect to sign-in if not signed in and not on auth page
+      router.replace("/(auth)/sign-in");
+    }
+  }, [isLoaded, isSignedIn, segments]);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Stack>
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            title: "Recipes",
-          }}
-        />
-        <Stack.Screen
-          name="create"
-          options={{
-            title: "Create Recipe",
-            headerBackTitle: "Recipes",
-          }}
-        />
-        <Stack.Screen
-          name="recipe"
-          options={{
-            headerShown: false,
-            headerBackTitle: "Recipes",
-          }}
-        />
-      </Stack>
-    </QueryClientProvider>
+    <Stack>
+      <Stack.Screen
+        name="(auth)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="(tabs)"
+        options={{
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="create"
+        options={{
+          title: "Create Recipe",
+          headerBackTitle: "Recipes",
+        }}
+      />
+      <Stack.Screen
+        name="recipe"
+        options={{
+          headerShown: false,
+        }}
+      />
+    </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ClerkProvider publishableKey={clerkPublishableKey} tokenCache={tokenCache}>
+      <ClerkLoaded>
+        <ConvexClientProvider>
+          <InitialLayout />
+        </ConvexClientProvider>
+      </ClerkLoaded>
+    </ClerkProvider>
   );
 }

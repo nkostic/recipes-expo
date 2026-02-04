@@ -1,16 +1,33 @@
-export interface Recipe {
+import type { Doc, Id } from "../../convex/_generated/dataModel";
+
+// Recipe type from Convex (with _id and _creationTime)
+export type Recipe = Doc<"recipes">;
+
+// For backwards compatibility in components that expect 'id' instead of '_id'
+export interface RecipeWithStringId {
   id: string;
+  userId: string;
   title: string;
   description: string;
   author: string;
-  datePublished: string; // ISO date string
-  image?: string; // URI or base64 string
-  ingredients: string[]; // Array of ingredient descriptions
-  steps: string[]; // Array of step descriptions
-  prepTimeMinutes: number; // Preparation time in minutes
-  createdAt: string; // ISO date string
-  updatedAt: string; // ISO date string
+  datePublished: string;
+  image?: string;
+  ingredients: string[];
+  steps: string[];
+  prepTimeMinutes: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type CreateRecipeInput = Omit<Recipe, "id" | "createdAt" | "updatedAt">;
-export type UpdateRecipeInput = Partial<Omit<Recipe, "id" | "createdAt" | "updatedAt">>;
+export type CreateRecipeInput = {
+  title: string;
+  description: string;
+  author: string;
+  datePublished: string;
+  image?: string;
+  ingredients: string[];
+  steps: string[];
+  prepTimeMinutes: number;
+};
+
+export type UpdateRecipeInput = Partial<CreateRecipeInput>;

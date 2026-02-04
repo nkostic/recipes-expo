@@ -1,24 +1,23 @@
-import { Stack, useRouter } from 'expo-router';
-import { Alert } from 'react-native';
-import { RecipeForm } from '../components/RecipeForm';
-import { useCreateRecipe } from '../hooks/useRecipes';
-import type { CreateRecipeInput } from '../types';
+import { Stack, useRouter } from "expo-router";
+import { Alert } from "react-native";
+import { RecipeForm, type RecipeFormData } from "../components/RecipeForm";
+import { useCreateRecipe } from "../hooks/useRecipes";
 
 export default function CreateRecipeScreen() {
   const router = useRouter();
   const createRecipeMutation = useCreateRecipe();
 
-  const handleSubmit = async (data: CreateRecipeInput) => {
+  const handleSubmit = async (data: RecipeFormData) => {
     try {
       await createRecipeMutation.mutateAsync(data);
-      Alert.alert('Success', 'Recipe created successfully!', [
+      Alert.alert("Success", "Recipe created successfully!", [
         {
-          text: 'OK',
+          text: "OK",
           onPress: () => router.back(),
         },
       ]);
     } catch (_error) {
-      Alert.alert('Error', 'Failed to create recipe. Please try again.');
+      Alert.alert("Error", "Failed to create recipe. Please try again.");
     }
   };
 
@@ -28,7 +27,7 @@ export default function CreateRecipeScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Create Recipe' }} />
+      <Stack.Screen options={{ title: "Create Recipe" }} />
       <RecipeForm
         onSubmit={handleSubmit}
         onCancel={handleCancel}

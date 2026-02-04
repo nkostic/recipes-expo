@@ -1,68 +1,69 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  createRecipe,
-  deleteRecipe,
-  getAllRecipes,
-  getRecipeById,
-  updateRecipe,
-} from '../lib/recipeRepository';
-import type { CreateRecipeInput, UpdateRecipeInput } from '../types';
+import { useMutation, useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import type { Id } from "../../convex/_generated/dataModel";
+import type { CreateRecipeInput, UpdateRecipeInput } from "../types";
+
+// Extended input type that includes imageStorageId
+interface CreateRecipeWithStorageInput extends CreateRecipeInput {
+  imageStorageId?: Id<"_storage">;
+}
+
+interface UpdateRecipeWithStorageInput extends UpdateRecipeInput {
+  imageStorageId?: Id<"_storage">;
+}
 
 export const useRecipes = () => {
-  return useQuery({
-    queryKey: ['recipes'],
-    queryFn: () => getAllRecipes(),
-  });
+  const recipes = useQuery(api.recipes.getAll);
+
+  return {
+    data: recipes,
+    isLoading: recipes === undefined,
+  };
 };
 
 export const useRecipe = (id: string) => {
-  return useQuery({
-    queryKey: ['recipe', id],
-    queryFn: () => getRecipeById(id),
-    enabled: !!id,
-  });
+  const recipe = useQuery(api.recipes.getById, id ? { id: id as Id<"recipes"> } : "skip");
+
+  return {
+    data: recipe,
+    isLoading: recipe === undefined,
+  };
 };
 
 export const useCreateRecipe = () => {
-  const queryClient = useQueryClient();
+  const createRecipeMutation = useMutation(api.recipes.create);
 
-  return useMutation({
-    mutationFn: (input: CreateRecipeInput) => {
-      return Promise.resolve(createRecipe(input));
+  return {
+    mutateAsync: async (input: CreateRecipeWithStorageInput) => {
+      return await createRecipeMutation(input);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-    },
-  });
+    isPending: false,
+  };
 };
 
 export const useUpdateRecipe = () => {
-  const queryClient = useQueryClient();
+  const updateRecipeMutation = useMutation(api.recipes.update);
 
-  return useMutation({
-    mutationFn: ({ id, updates }: { id: string; updates: UpdateRecipeInput }) => {
-      const result = updateRecipe(id, updates);
-      if (!result) throw new Error('Recipe not found');
-      return Promise.resolve(result);
+  return {
+    mutateAsync: async ({ id, updates }: { id: string; updates: UpdateRecipeWithStorageInput }) => {
+      await updateRecipeMutation({
+        id: id as Id<"recipes">,
+        ...updates,
+      });
+      return { id };
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-      queryClient.invalidateQueries({ queryKey: ['recipe', data.id] });
-    },
-  });
+    isPending: false,
+  };
 };
 
 export const useDeleteRecipe = () => {
-  const queryClient = useQueryClient();
+  const deleteRecipeMutation = useMutation(api.recipes.remove);
 
-  return useMutation({
-    mutationFn: (id: string) => {
-      const success = deleteRecipe(id);
-      if (!success) throw new Error('Failed to delete recipe');
-      return Promise.resolve(id);
+  return {
+    mutateAsync: async (id: string) => {
+      await deleteRecipeMutation({ id: id as Id<"recipes"> });
+      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['recipes'] });
-    },
-  });
+    isPending: false,
+  };
 };

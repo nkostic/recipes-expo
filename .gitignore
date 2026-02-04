@@ -2,7 +2,7 @@
 
 # dependencies
 node_modules/
-.nkostic/
+
 # Expo
 .expo/
 dist/
@@ -30,8 +30,16 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
+# Environment variables - NEVER commit secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 .env*.local
+
+# Convex generated files
+convex/_generated/
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +47,13 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Editor
+.vscode/
+.idea/
+
+# Testing
+coverage/
+
+# Personal notes
+.nkostic/

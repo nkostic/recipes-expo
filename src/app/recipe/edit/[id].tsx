@@ -1,9 +1,8 @@
-import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { Alert } from 'react-native';
-import { Loading } from '../../../components/Loading';
-import { RecipeForm } from '../../../components/RecipeForm';
-import { useRecipe, useUpdateRecipe } from '../../../hooks/useRecipes';
-import type { CreateRecipeInput } from '../../../types';
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { Alert } from "react-native";
+import { Loading } from "../../../components/Loading";
+import { RecipeForm, type RecipeFormData } from "../../../components/RecipeForm";
+import { useRecipe, useUpdateRecipe } from "../../../hooks/useRecipes";
 
 export default function EditRecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -16,20 +15,20 @@ export default function EditRecipeScreen() {
     return null;
   }
 
-  const handleSubmit = async (data: CreateRecipeInput) => {
+  const handleSubmit = async (data: RecipeFormData) => {
     try {
       await updateRecipeMutation.mutateAsync({
         id: id as string,
         updates: data,
       });
-      Alert.alert('Success', 'Recipe updated successfully!', [
+      Alert.alert("Success", "Recipe updated successfully!", [
         {
-          text: 'OK',
+          text: "OK",
           onPress: () => router.back(),
         },
       ]);
     } catch (_error) {
-      Alert.alert('Error', 'Failed to update recipe. Please try again.');
+      Alert.alert("Error", "Failed to update recipe. Please try again.");
     }
   };
 
@@ -44,7 +43,7 @@ export default function EditRecipeScreen() {
   if (!recipe) {
     return (
       <>
-        <Stack.Screen options={{ title: 'Recipe Not Found' }} />
+        <Stack.Screen options={{ title: "Recipe Not Found" }} />
         <Loading message="Recipe not found" />
       </>
     );
@@ -52,7 +51,7 @@ export default function EditRecipeScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ title: 'Edit Recipe' }} />
+      <Stack.Screen options={{ title: "Edit Recipe" }} />
       <RecipeForm
         initialData={recipe}
         onSubmit={handleSubmit}

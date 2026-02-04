@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
+import { Stack, Tabs } from "expo-router";
 
 export default function TabLayout() {
   return (
@@ -15,13 +15,23 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          headerTitle: "Recipes",
+          headerShown: false,
+          title: "Recipes",
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "restaurant" : "restaurant-outline"}
               color={color}
               size={24}
             />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? "person" : "person-outline"} color={color} size={24} />
           ),
         }}
       />

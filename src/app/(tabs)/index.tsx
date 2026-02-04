@@ -1,21 +1,22 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { FlatList, RefreshControl, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { Loading } from '../../components/Loading';
-import { RecipeCard } from '../../components/RecipeCard';
-import { useRecipes } from '../../hooks/useRecipes';
-import type { Recipe } from '../../types';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Loading } from "../../components/Loading";
+import { RecipeCard } from "../../components/RecipeCard";
+import { useRecipes } from "../../hooks/useRecipes";
+import type { Recipe } from "../../types";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { data: recipes, isLoading, refetch, isRefetching } = useRecipes();
+  const { data: recipes, isLoading } = useRecipes();
 
   const handleRecipePress = (recipe: Recipe) => {
-    router.push(`/recipe/${recipe.id}`);
+    router.push(`/recipe/${recipe._id}`);
   };
 
   const handleAddRecipe = () => {
-    router.push('/create');
+    router.push("/create");
   };
 
   const renderRecipe = ({ item }: { item: Recipe }) => (
@@ -27,7 +28,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <View style={styles.header}>
         <Text style={styles.headerTitle}>My Recipes</Text>
         <TouchableOpacity style={styles.addButton} onPress={handleAddRecipe}>
@@ -38,11 +39,8 @@ export default function HomeScreen() {
       <FlatList
         data={recipes}
         renderItem={renderRecipe}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor="#007AFF" />
-        }
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Ionicons name="restaurant-outline" size={64} color="#ccc" />
@@ -51,57 +49,57 @@ export default function HomeScreen() {
           </View>
         }
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: "#f8f9fa",
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 16,
     paddingVertical: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: "#e9ecef",
   },
   headerTitle: {
     fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: "#007AFF",
     borderRadius: 24,
     width: 48,
     height: 48,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   listContent: {
     paddingVertical: 8,
   },
   emptyContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     paddingTop: 100,
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: "600",
+    color: "#666",
     marginTop: 16,
   },
   emptySubtext: {
     fontSize: 14,
-    color: '#999',
+    color: "#999",
     marginTop: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

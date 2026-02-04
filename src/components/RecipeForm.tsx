@@ -1,11 +1,12 @@
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
 import type React from "react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
   StyleSheet,
@@ -14,6 +15,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { Id } from "../../convex/_generated/dataModel";
+import { useImageUpload } from "../hooks/useImageUpload";
 import type { CreateRecipeInput } from "../types";
 
 interface IngredientItem {
@@ -26,9 +30,13 @@ interface StepItem {
   text: string;
 }
 
+export interface RecipeFormData extends CreateRecipeInput {
+  imageStorageId?: Id<"_storage">;
+}
+
 interface RecipeFormProps {
   initialData?: Partial<CreateRecipeInput>;
-  onSubmit: (data: CreateRecipeInput) => void;
+  onSubmit: (data: RecipeFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
 }
@@ -39,6 +47,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   onCancel,
   isSubmitting = false,
 }) => {
+  const { pickAndUploadImage, takeAndUploadPhoto, isUploading } = useImageUpload();
+
   const [title, setTitle] = useState(initialData?.title || "");
   const [description, setDescription] = useState(initialData?.description || "");
   const [author, setAuthor] = useState(initialData?.author || "");
@@ -47,6 +57,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [image, setImage] = useState<string | undefined>(initialData?.image);
+  const [imageStorageId, setImageStorageId] = useState<Id<"_storage"> | undefined>(undefined);
   const [ingredients, setIngredients] = useState<IngredientItem[]>(() => {
     if (initialData?.ingredients?.length) {
       return initialData.ingredients.map((text, index) => ({
@@ -142,49 +153,33 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     setIngredients(newIngredients);
   };
 
-  const pickImage = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "Please grant permission to access your photo library");
-      return;
-    }
-
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+  const handlePickImage = async () => {
+    const result = await pickAndUploadImage();
+    if (result) {
+      setImage(result.localUri);
+      setImageStorageId(result.storageId);
     }
   };
 
-  const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== "granted") {
-      Alert.alert("Permission required", "Please grant permission to access your camera");
-      return;
-    }
-
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.8,
-    });
-
-    if (!result.canceled) {
-      setImage(result.assets[0].uri);
+  const handleTakePhoto = async () => {
+    const result = await takeAndUploadPhoto();
+    if (result) {
+      setImage(result.localUri);
+      setImageStorageId(result.storageId);
     }
   };
 
   const showImageOptions = () => {
     Alert.alert("Recipe Photo", "Choose how to add a photo", [
-      { text: "Camera", onPress: takePhoto },
-      { text: "Photo Library", onPress: pickImage },
+      { text: "Camera", onPress: handleTakePhoto },
+      { text: "Photo Library", onPress: handlePickImage },
       { text: "Cancel", style: "cancel" },
     ]);
+  };
+
+  const handleRemoveImage = () => {
+    setImage(undefined);
+    setImageStorageId(undefined);
   };
 
   const handleSubmit = () => {
@@ -192,12 +187,13 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
       return;
     }
 
-    const formattedData: CreateRecipeInput = {
+    const formattedData: RecipeFormData = {
       title: title.trim(),
       description: description.trim(),
       author: author.trim(),
       datePublished: datePublished.toISOString(),
       image,
+      imageStorageId,
       ingredients: ingredients
         .filter((ingredient) => ingredient.text.trim() !== "")
         .map((item) => item.text),
@@ -208,13 +204,36 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
     onSubmit(formattedData);
   };
 
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef<ScrollView>(null);
+
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
+    >
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.scrollView} 
+        contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 50 }]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+      >
       {/* Image Upload Section */}
       <View style={styles.section}>
         <Text style={styles.label}>Recipe Photo</Text>
-        <TouchableOpacity style={styles.imageUploadButton} onPress={showImageOptions}>
-          {image ? (
+        <TouchableOpacity
+          style={styles.imageUploadButton}
+          onPress={showImageOptions}
+          disabled={isUploading}
+        >
+          {isUploading ? (
+            <View style={styles.placeholderImage}>
+              <ActivityIndicator size="large" color="#007AFF" />
+              <Text style={styles.placeholderText}>Uploading...</Text>
+            </View>
+          ) : image ? (
             <Image source={{ uri: image }} style={styles.uploadedImage} contentFit="cover" />
           ) : (
             <View style={styles.placeholderImage}>
@@ -223,8 +242,8 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
             </View>
           )}
         </TouchableOpacity>
-        {image && (
-          <TouchableOpacity style={styles.removeImageButton} onPress={() => setImage(undefined)}>
+        {image && !isUploading && (
+          <TouchableOpacity style={styles.removeImageButton} onPress={handleRemoveImage}>
             <Text style={styles.removeImageText}>Remove Photo</Text>
           </TouchableOpacity>
         )}
@@ -396,6 +415,7 @@ export const RecipeForm: React.FC<RecipeFormProps> = ({
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -404,9 +424,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
+  scrollView: {
+    flex: 1,
+  },
   content: {
     padding: 16,
-    paddingBottom: 50,
   },
   section: {
     marginBottom: 24,
